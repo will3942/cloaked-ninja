@@ -6,11 +6,12 @@ var irc = require('irc'),
   
 var currentchan = "";
 var silent = 1;
-var poptart = new irc.Client('irc.freenode.net', 'waffle', {
-  channels: ['#ircnode', '#yrss'],
+var poptart = new irc.Client('irc.freenode.net', 'pepsico', {
+  channels: ['#ircnode', '#yrs'],
   port: 6667,
-  userName: 'waffle',
-  realName: 'beep'
+  userName: 'pepsico',
+  realName: 'beep',
+  password: ''
 });
 
 var db = mongodb.connect('irc', ['messages']);
@@ -55,6 +56,9 @@ function findUrl(msg){
 poptart.addListener('message', function(from, to, message) {
   var now = new Date().toJSON();
   db.messages.save({nick: from, message: message, date: now}, function(err, saved) {
+    if (err) {
+      console.log(err);
+    }
   });
   var url = findUrl(message);
   var ytId = parseYoutubeUrl(message);
@@ -65,7 +69,7 @@ poptart.addListener('message', function(from, to, message) {
   else if (typeof url != 'undefined' && !silent) {
     parsePageInfo(url, to);    
   }
-  if (message.match(/.help/) ) {
+  if (message.match(/\.\bhelp\b/) ) {
     if (!silent) {
       poptart.say(to, "Use .lastsaw NICK to check when NICK last sent a message. Paste a YouTube URL and I will post info about the title, likes, views and duration. Paste a URL and I will tell you about the page title.");
     }
@@ -73,15 +77,15 @@ poptart.addListener('message', function(from, to, message) {
       poptart.say(to, "Oops, I've been silenced! I'm a silent logger. Use .lastsaw NICK to check when NICK last sent a message.");
     }
   }
-  if (message.match(/.silent/)) {
+  if (message.match(/\.\bsilent\b/)) {
     silent = 1;
     poptart.say(to, "I'm quiet.");
   }
-  if (message.match(/.speak/)) {
+  if (message.match(/\.\bspeak\b/)) {
     silent = 0;
     poptart.say(to, "I'll speak more now :-)");
   }
-  if (message.match(/.lastsaw /) ) {
+  if (message.match(/\.\blastsaw \b/) ) {
     message = message.replace(".lastsaw ", "");
     message = message.replace(/ /g, "");
     if (message !== "poptart") {
@@ -96,18 +100,18 @@ poptart.addListener('message', function(from, to, message) {
           if (seconds >= 60) {
             if (minutes >= 60) {
               if (hours >= 24) {
-                poptart.say(to, messages[0].nick + " was last seen " + days + " days ago.");
+                poptart.say(to, messages[0].nick + " was last seen " + days + " days ago saying " + messages[0].message);
               }
               else {
-                poptart.say(to, messages[0].nick + " was last seen " + hours + " hours ago.");
+                poptart.say(to, messages[0].nick + " was last seen " + hours + " hours ago saying " + messages[0].message);
               }
             }
             else {
-              poptart.say(to, messages[0].nick + " was last seen " + minutes + " minutes ago.");
+              poptart.say(to, messages[0].nick + " was last seen " + minutes + " minutes ago saying " + messages[0].message);
             }
           }
           else {
-            poptart.say(to, messages[0].nick + " was last seen " + seconds + " seconds ago.");
+            poptart.say(to, messages[0].nick + " was last seen " + seconds + " seconds ago saying " + messages[0].message);
           }
         }
         else {
