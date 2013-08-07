@@ -5,10 +5,11 @@ var irc = require('irc'),
     mongodb = require('mongojs');
   
 var currentchan = "";
-var poptart = new irc.Client('irc.freenode.net', 'poptart', {
-  channels: ['#ircnode'],
+var silent = 1;
+var poptart = new irc.Client('irc.freenode.net', 'waffle', {
+  channels: ['#ircnode', '#yrss'],
   port: 6667,
-  userName: 'poptart',
+  userName: 'waffle',
   realName: 'beep'
 });
 
@@ -61,11 +62,24 @@ poptart.addListener('message', function(from, to, message) {
     currentchan = to;
     youtube.video(ytId, parseYoutubeInfo);
   }
-  else if (typeof url != 'undefined') {
+  else if (typeof url != 'undefined' && !silent) {
     parsePageInfo(url, to);    
   }
   if (message.match(/.help/) ) {
-    poptart.say(to, "Use .lastsaw NICK to check when NICK last sent a message. Paste a YouTube URL and I will post info about the title, likes, views and duration. Paste a URL and I will tell you about the page title.");
+    if (!silent) {
+      poptart.say(to, "Use .lastsaw NICK to check when NICK last sent a message. Paste a YouTube URL and I will post info about the title, likes, views and duration. Paste a URL and I will tell you about the page title.");
+    }
+    else {
+      poptart.say(to, "Oops, I've been silenced! I'm a silent logger. Use .lastsaw NICK to check when NICK last sent a message.");
+    }
+  }
+  if (message.match(/.silent/)) {
+    silent = 1;
+    poptart.say(to, "I'm quiet.");
+  }
+  if (message.match(/.speak/)) {
+    silent = 0;
+    poptart.say(to, "I'll speak more now :-)");
   }
   if (message.match(/.lastsaw /) ) {
     message = message.replace(".lastsaw ", "");
