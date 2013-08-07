@@ -6,7 +6,7 @@ var irc = require('irc'),
   
 var currentchan = "";
 var poptart = new irc.Client('irc.freenode.net', 'poptart', {
-  channels: ['#yrs', '#ircnode'],
+  channels: ['#ircnode'],
   port: 6667,
   userName: 'poptart',
   realName: 'beep'
@@ -38,17 +38,31 @@ function parsePageInfo(url, to) {
   });
 }
 
+function findUrl(msg){
+  var source = (msg || '').toString();
+  var urlArray = [];
+  var url;
+  var matchArray;
+  var regexToken = /(((ftp|https?):\/\/)[\-\w@:%_\+.~#?,&\/\/=]+)|((mailto:)?[_.\w-]+@([\w][\w\-]+\.)+[a-zA-Z]{2,3})/g;
+  while( (matchArray = regexToken.exec(source)) !== null ){
+    var token = matchArray[0];
+    urlArray.push( token );
+  }
+  return urlArray[0];
+}
+
 poptart.addListener('message', function(from, to, message) {
   var now = new Date().toJSON();
   db.messages.save({nick: from, message: message, date: now}, function(err, saved) {
   });
+  var url = findUrl(message);
   var ytId = parseYoutubeUrl(message);
   if (ytId) {
     currentchan = to;
     youtube.video(ytId, parseYoutubeInfo);
   }
-  else if (message.split("http://").length > 1 || message.split("https://").length > 1) {
-    parsePageInfo(message, to);    
+  else if (typeof url != 'undefined') {
+    parsePageInfo(url, to);    
   }
   if (message.match(/.help/) ) {
     poptart.say(to, "Use .lastsaw NICK to check when NICK last sent a message. Paste a YouTube URL and I will post info about the title, likes, views and duration. Paste a URL and I will tell you about the page title.");
