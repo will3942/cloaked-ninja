@@ -51,7 +51,7 @@ poptart.addListener('message', function(from, to, message) {
     parsePageInfo(message, to);    
   }
   if (message.match(/.help/) ) {
-    poptart.say(to, "Use .lastsaw NICK to check when NICK last sent a message. Paste a YouTube URL and I will post info about the title, likes, views and duration. Paste a URL and I will tell you about the page title.);
+    poptart.say(to, "Use .lastsaw NICK to check when NICK last sent a message. Paste a YouTube URL and I will post info about the title, likes, views and duration. Paste a URL and I will tell you about the page title.");
   }
   if (message.match(/.lastsaw /) ) {
     message = message.replace(".lastsaw ", "");
